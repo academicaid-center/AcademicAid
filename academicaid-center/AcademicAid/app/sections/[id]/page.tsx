@@ -12,6 +12,7 @@ export default function SectionDetail() {
   const params = useParams<{ id: string }>();
   const [section, setSection] = useState<Section | null>(null);
   const [materials, setMaterials] = useState<Material[]>([]);
+  const [signed, setSigned] = useState<Record<string, string>>({});
   const [canAccess, setCanAccess] = useState<boolean>(false);
 
   useEffect(() => {
@@ -26,7 +27,17 @@ export default function SectionDetail() {
           .order("order_index"),
       ]);
       setSection(s as any);
-      setMaterials((m || []) as any);
+      const mats = (m || []) as any as Material[];
+      setMaterials(mats);
+
+      const needSign = mats.filter((x) => x.video_url && !/^https?:\/\//.test(x.video_url));
+      const entries = await Promise.all(
+        needSign.map(async (x) => {
+          const r = await supabase.storage.from("videos").createSignedUrl(x.video_url as string, 3600);
+          return [x.id, r.data?.signedUrl || ""] as const;
+        })
+      );
+      setSigned(Object.fromEntries(entries));
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -57,8 +68,7 @@ export default function SectionDetail() {
             {m.description && <p className="text-sm text-gray-600 mt-1">{m.description}</p>}
             {(m.is_free_preview || canAccess) && m.video_url && (
               <div className="mt-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <iframe className="w-full aspect-video rounded-lg border" src={m.video_url} allowFullScreen />
+                <iframe className="w-full aspect-video rounded-lg border" src={signed[m.id] || m.video_url} allowFullScreen />
               </div>
             )}
             {!m.is_free_preview && !canAccess && (
