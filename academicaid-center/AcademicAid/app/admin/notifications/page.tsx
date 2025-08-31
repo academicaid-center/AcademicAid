@@ -28,6 +28,30 @@ export default function AdminNotifications() {
       p_type: type,
     });
     if (error) return alert(error.message);
+
+    // Try to also send FCM push if server key configured
+    try {
+      let tokens: string[] = [];
+      if (!secId) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("push_token")
+          .not("push_token", "is", null)
+          .eq("notifications_enabled", true);
+        tokens = (data || []).map((x: any) => x.push_token).filter(Boolean);
+      } else {
+        const { data } = await supabase
+          .from("user_entitlements")
+          .select("profiles!inner(push_token)")
+          .eq("section_id", secId)
+          .is("expires_at", null);
+        tokens = (data || []).map((x: any) => x.profiles?.push_token).filter(Boolean);
+      }
+      if (tokens.length) {
+        await fetch('/api/push', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tokens, title, body, data: { type } }) });
+      }
+    } catch {}
+
     alert("تم الإرسال");
     setTitle("");
     setBody("");
