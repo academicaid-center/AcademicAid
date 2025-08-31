@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 
 type Section = { id: string; name_ar: string };
 
-type Material = { id: string; section_id: string; title: string; description: string | null; video_url: string | null; is_free_preview: boolean; order_index: number; duration_minutes: number | null };
+type Material = { id: string; section_id: string; title: string; description: string | null; video_url: string | null; is_free_preview: boolean; order_index: number; duration_minutes: number | null; is_approved?: boolean };
 
 export default function AdminMaterials() {
   const [sections, setSections] = useState<Section[]>([]);
@@ -17,7 +17,7 @@ export default function AdminMaterials() {
   const load = async () => {
     const [{ data: secs }, { data: mats }] = await Promise.all([
       supabase.from("sections").select("id, name_ar"),
-      supabase.from("materials").select("id, section_id, title, description, video_url, is_free_preview, order_index, duration_minutes").order("created_at", { ascending: false }),
+      supabase.from("materials").select("id, section_id, title, description, video_url, is_free_preview, order_index, duration_minutes, is_approved").order("created_at", { ascending: false }),
     ]);
     setSections((secs || []) as any);
     setItems((mats || []) as any);
@@ -54,6 +54,11 @@ export default function AdminMaterials() {
 
   const remove = async (id: string) => {
     await supabase.from("materials").delete().eq("id", id);
+    await load();
+  };
+
+  const toggleApprove = async (id: string, next: boolean) => {
+    await supabase.from("materials").update({ is_approved: next }).eq("id", id);
     await load();
   };
 
@@ -107,8 +112,14 @@ export default function AdminMaterials() {
               <div>
                 <div className="font-semibold">{m.title}</div>
                 <div className="text-xs text-gray-500">قسم: {sections.find((s) => s.id === m.section_id)?.name_ar || ""}</div>
+                <div className="text-xs mt-1">
+                  الحالة: {m.is_approved ? <span className="text-green-600">مقبولة</span> : <span className="text-yellow-700">بانتظار الموافقة</span>}
+                </div>
               </div>
-              <button onClick={() => remove(m.id)} className="btn-outline">حذف</button>
+              <div className="flex items-center gap-2">
+                <button onClick={() => toggleApprove(m.id, !m.is_approved)} className="btn-outline">{m.is_approved ? 'إلغاء القبول' : 'قبول'}</button>
+                <button onClick={() => remove(m.id)} className="btn-outline">حذف</button>
+              </div>
             </div>
           ))}
         </div>

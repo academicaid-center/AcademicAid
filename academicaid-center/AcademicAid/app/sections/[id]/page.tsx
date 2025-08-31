@@ -24,6 +24,7 @@ export default function SectionDetail() {
           .from("materials")
           .select("id, title, description, video_url, is_free_preview, order_index, duration_minutes, section_id")
           .eq("section_id", sectionId)
+          .eq("is_approved", true)
           .order("order_index"),
       ]);
       setSection(s as any);
