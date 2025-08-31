@@ -28,6 +28,6 @@ const config: Config = {
       }
     }
   },
-  plugins: [require('tailwindcss-rtl')],
+  plugins: [require('@tailwindcss/typography')],
 }
 export default config
