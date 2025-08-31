@@ -3,7 +3,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
-export default function AdminGate({ children, roles = ["admin"] as ("admin"|"teacher")[] }) {
+export default function AdminGate({ children, roles = ["admin"] }: { children: ReactNode; roles?: ("admin"|"teacher")[] }) {
   const [state, setState] = useState<"loading" | "denied" | "ok">("loading");
 
   useEffect(() => {

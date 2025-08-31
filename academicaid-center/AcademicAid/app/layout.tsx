@@ -37,7 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </header>
         <main className="container flex-1 py-6">{children}</main>
         <Footer />
-        {typeof window !== 'undefined' && <NotificationsInitializer />}
+        <NotificationsInitializer />
       </body>
     </html>
   );

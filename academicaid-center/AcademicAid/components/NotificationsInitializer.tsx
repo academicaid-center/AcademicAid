@@ -18,6 +18,8 @@ export default function NotificationsInitializer() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     (async () => {
       try {
         if (!firebaseConfig.apiKey) return;
@@ -33,6 +35,8 @@ export default function NotificationsInitializer() {
         if (Notification.permission !== "granted") return;
 
         const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
+        if (!vapidKey) return;
+        
         const token = await getToken(messaging, { vapidKey: vapidKey });
 
         const {
@@ -57,6 +61,5 @@ export default function NotificationsInitializer() {
     })();
   }, []);
 
-  if (!ready) return null;
   return null;
 }
